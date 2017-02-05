@@ -1,8 +1,10 @@
 ---
-title: "Untitled"
+title: "CUNY DATA 605 (CompMath) - Assign1"
 author: "Raphael Nash"
 date: "2/1/2017"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
