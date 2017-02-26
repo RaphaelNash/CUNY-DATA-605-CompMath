@@ -1,0 +1,139 @@
+---
+title: "CUNY DATA 605 (CompMath) - Assign2"
+author: "Raphael Nash"
+date: "2/1/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Problem Set 1
+
+**1) Show that $A^T \times A \ne A \times A^T$**
+
+
+**Proof** 
+$A = \begin{pmatrix}
+a & b  \\
+c & d 
+\end{pmatrix}$
+
+$A^T = \begin{pmatrix}
+a & c  \\
+b & d 
+\end{pmatrix}$
+
+$A^T \times A = \begin{pmatrix}
+a^2 + c^2 & ab+cd  \\
+ba+dc & b^2+d^2 
+\end{pmatrix}$
+
+$A \times A^T = \begin{pmatrix}
+a^2 + b^2 & ac+bd  \\
+ca+db & c^2+d^2 
+\end{pmatrix}$
+
+
+**Demonstration  $A^T \times A \ne A \times A^T$ **
+
+```{r}
+A <- matrix (c (1,2,3,4), nrow = 2, ncol=2 , byrow = TRUE)
+A_Transpose <- t(A)
+
+A
+A_Transpose
+
+```
+
+
+$A \times A^T$
+
+
+```{r}
+A %*% A_Transpose
+```
+
+$A_T \times A$
+
+
+```{r}
+ A_Transpose %*% A 
+```
+
+
+**2)For a special type of square matrix A, we get $A^T \times A = AA^T$ . Under what conditions
+could this be true?**
+
+This is true if the matrix is symetrical.
+
+$A = \begin{pmatrix}
+a & c  \\
+c & a 
+\end{pmatrix}$
+
+$A^T = \begin{pmatrix}
+a & c  \\
+c & a 
+\end{pmatrix}$
+
+Therfore:
+
+$A^T \times A = A \times A^T = A^T$
+
+
+
+#Problem Set 2
+
+```{r}
+
+
+LU_Factor <- function  (x) { 
+u <- x
+
+elimMatrices <- list()
+i<-0
+  for ( cur_row in 2: nrow(u)) {
+   
+    for( cur_col in 1: (cur_row -1 ))  {
+       i <- i + 1 
+      denom <- u[cur_col,cur_col]
+      num <- u [cur_row ,cur_col]
+      mult <- num / denom 
+      
+      elim <- diag ( nrow(u))
+      elim[ cur_row, cur_col] <- -1 * mult
+
+      u <- elim %*% u 
+      
+      elimMatrices[[i]] <- elim
+
+    }
+  
+  }
+
+  L <- diag(nrow(u))
+  for (i in 1:length(elimMatrices))  {
+    L <- L %*% solve(elimMatrices[[i]])
+  }
+  
+  LU <- list ( L = L , U = u )
+  
+  LU
+  
+  }
+
+A <- matrix (c (1,1,3,2,-1,5,-1,-2,4), nrow = 3, ncol=3 , byrow = TRUE)
+A
+
+LU <- LU_Factor(A)
+
+LU
+
+LU[["L"]] %*% LU[["U"]] 
+
+```
+
+
