@@ -2,7 +2,9 @@
 title: "HW4"
 author: "Raphael Nash"
 date: "2/21/2017"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -114,9 +116,9 @@ myinverse <- function(A) {
 ```{r}
 
 A <- matrix(c(1, -1, 1, 1,1,1,1,2,4) , ncol = 3 , byrow =  TRUE )
-A
+
 B <- myinverse(A)
-B
-solve(A)
+
+A %*% B
 
 ```
