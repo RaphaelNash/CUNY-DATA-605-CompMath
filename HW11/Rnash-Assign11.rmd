@@ -1,0 +1,140 @@
+---
+title: "Rnash-Assing11.rmd"
+author: "Raphael Nash"
+date: "4/10/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+#Problem 1
+**Using R's lm function, perform regression analysis and measure the significance of the
+independent variables for the following two data sets. In the first case, you are evaluating
+the statement that we hear that Maximum Heart Rate of a person is related to their age
+by the following equation:
+
+MaxHR = 220 - Age**
+
+```{r}
+hr_df= data.frame(
+  Age = c(18,23,25,35,65,54,34,56,72,19,23,42,18,39,37),
+  MaxHR = c(202,186,187,180,156,169,174,172,153,199,193,174,198,183,178)
+)
+
+hr_model <- lm (hr_df$MaxHR~ hr_df$Age)
+summary(hr_model)
+```
+
+
+**What is the resulting equation?**
+
+$$y = `r hr_model$coefficients[['hr_df$Age']] ` \times Age - `r hr_model$coefficients[['(Intercept)']]` $$
+```{r}
+hr_model$coefficients[[2]]
+hr_model$coefficients[[1]]
+```
+
+**What is the signiffcance level?** 
+
+` r hr_model_stats$coefficients[2,4]`
+
+**Please also plot the fitted relationship between Max HR and Age.**
+
+```{r}
+ggplot(data=hr_df, aes(y=MaxHR, x= Age)) +geom_point() + stat_smooth(method = "lm", col = "red")
+
+```
+
+# Problem 2
+
+**Using the Auto data set from Assignment 5 (also attached here) perform a Linear Re-
+gression analysis using mpg as the dependent variable and the other 4 (displacement, horse-
+power, weight, acceleration) as independent variables. What is the final linear regression fit
+equation?**
+
+**Perform the following by a) using the all the data, b) Using a sample of 40 data points:**
+
+```{r}
+mpg_data <- read.table("https://raw.githubusercontent.com/RaphaelNash/CUNY-DATA-605-CompMath/master/HW11/auto-mpg.data")
+names(mpg_data) <- c('displacement', 'horsepower', 'weight', 'acceleration', 'mpg')
+```
+
+```{r}
+
+set.seed(1)
+mpg_sample_data <- mpg_data[sample(nrow(mpg_data), 40), ]
+mpg_sample_model <- lm(mpg ~ ., mpg_sample_data)
+mpg_sample_model_ci <- confint(mpg_sample_model)
+mpg_sample_model_summary <- summary(mpg_sample_model)
+mpg_sample_model_coef <- mpg_sample_model_summary$coefficients
+
+
+mpg_sample_model_sig <- mpg_sample_model_coef[, "Pr(>|t|)"]
+mpg_sample_model_summary
+```
+
+```{r}
+
+mpg_model <- lm(mpg ~ ., mpg_data)
+mpg_model_ci <- confint(mpg_model)
+mpg_model_summary <- summary(mpg_model)
+mpg_model_coef <- mpg_model_summary$coefficients
+mpg_model_sig <- mpg_model_coef[, "Pr(>|t|)"]
+mpg_model_summary
+
+```
+
+**What is the final linear regression fit?**
+
+
+
+Sample Model: mpg = (`r mpg_sample_model_coef[['displacement', 1]]` )  displacement + (`r mpg_sample_model_coef[['horsepower',1]] `)  horsepower + (`r mpg_sample_model_coef[['weight',1]]`)  weight + (`r mpg_sample_model_coef[['acceleration',1]] `)  acceleration +  (`r mpg_sample_model_coef[['(Intercept)',1]] `)
+
+Full Model:  mpg = (`r mpg_model_coef[['displacement', 1]]` )  displacement + (`r mpg_model_coef[['horsepower',1]] `)  horsepower + (`r mpg_sample_model_coef[['weight',1]]`)  weight + (`r mpg_model_coef[['acceleration',1]] `)  acceleration +  (`r mpg_model_coef[['(Intercept)',1]] `)
+
+
+**Which of the 4 independent variables have a significant impact on mpg? **
+
+
+```{r}
+
+sig <- cbind(mpg_sample_model_sig, mpg_model_sig) 
+sig
+
+```
+
+
+Sample:   weight only
+
+Full Model:  displacement, weight, acceleration
+
+**What are the standard errors on each of the coeffcients?**
+
+
+Sample Model:
+```{r}
+standard_errors <- rbind ( mpg_sample_model_coef[,'Std. Error'], mpg_model_coef[,'Std. Error']) 
+rownames(standard_errors) <- c('sample_model', 'full_model')
+standard_errors
+```
+
+**measure the 95% confidence intervals.**
+
+```{r}
+colnames( mpg_sample_model_ci) <-c('low_sample_model', 'high_sample_model')
+colnames( mpg_model_ci) <-c('low_full_model', 'high_full_model')
+ci <- cbind(mpg_sample_model_ci, mpg_model_ci) 
+
+```
+
+
+**Conclusions**
+1) The size of the confidence intervals is smaller on the full model 
+2) The standard error is smaller on the full model
+3) The number of signifigant factors is higher on the full model
+
