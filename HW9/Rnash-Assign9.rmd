@@ -1,0 +1,141 @@
+---
+title: "Assignment 9"
+author: Raphael Nash
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document: default
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(ggplot2)
+```
+
+#Problem Set 1
+
+This week, we'll empirically verify Central Limit Theorem. We'll write code to run a
+small simulation on some distributions and verify that the results match what we expect
+from Central Limit Theorem. 
+
+##1 
+First write a function that will produce a sample of random variable that is dis-
+tributed as follows:
+$$f(x)=x, 0 \leq x  \leq 1 $$
+$$f(x)=2-x, 1< x \leq 2 $$
+```{r}
+pdf1 <- function(x) {
+  
+  return <- NULL
+  if ( x >=0 && x <=1  )  {
+    return(x)
+  }
+  
+  if ( x > 1 && x<=2) {
+    return (2-x)
+  }
+  
+  return (NaN)
+
+}
+```
+
+##2
+Now, write a function that will produce a sample of random variable that is dis-
+tributed as follows:
+$$f(x) = 1-x, 0 \leq x \leq 1 $$
+$$f(x) = x-1, 1 < x \leq 2 $$
+
+```{r}
+
+pdf2 <- function(x) {
+  
+  
+  return <- NULL
+  if ( x >=0 && x <=1  )  {
+    return(1-x)
+  }
+  
+  if ( x > 1 && x<=2) {
+    return (x-1)
+  }
+  
+  return (NaN)
+
+}
+```
+
+##3
+Draw 1000 samples (call your function 1000 times each) from each of the above two
+distributions and plot the resulting histograms. You should have one histogram for
+each PDF. See that it matches your understanding of these PDFs.
+```{r}
+sequence <- seq(from=0, to=2, length.out=1000) 
+qplot( sample(sequence, 1000, replace=TRUE, prob= sapply(sequence, pdf1)), bins = 40  )
+```
+
+
+```{r}
+sequence <- seq(from=0, to=2, length.out=1000) 
+qplot( sample(sequence, 1000, replace=TRUE, prob= sapply(sequence, pdf2)), bins = 40  )
+```
+
+
+##4 
+Now, write a program that will take a sample set size n as a parameter and the
+PDF as the second parameter, and perform 1000 iterations where it samples from
+the PDF, each time taking n samples and computes the mean of these n samples.
+It then plots a histogram of these 1000 means that it computes.
+
+
+```{r}
+
+
+pdf_sampler <- function(n, pdf) {
+  
+  sequence <- seq(from=0, to=2, length.out=1000) 
+  means <- vector()
+  
+  for ( i in 1: n) {
+    means <- c(mean( sample(sequence, 1000, replace=TRUE, prob= sapply(sequence, pdf)) )  , means)
+  }
+  
+  means
+  
+}
+
+```
+
+
+##5 
+Verify that as you set n to something like 10 or 20, each of the two PDFs pro-
+duce normally distributed mean of samples, empirically verifying the Central Limit
+Theorem. Please play around with various values of n and you'll see that even for
+reasonably small sample sizes such as 10, Central Limit Theorem holds.
+
+
+
+
+```{r}
+qplot(pdf_sampler(10, pdf1), bins = 40  )
+
+qplot(pdf_sampler(10, pdf2), bins = 40  )
+```
+```{r}
+qplot(pdf_sampler(100, pdf1), bins = 40  )
+
+qplot(pdf_sampler(100, pdf2), bins = 40  )
+```
+
+
+
+
+
+```{r}
+qplot(pdf_sampler(5000, pdf1), bins = 40  )
+
+qplot(pdf_sampler(5000, pdf2), bins = 40  )
+```

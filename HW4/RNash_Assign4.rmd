@@ -18,8 +18,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 $X=AA^T$
 ```{r}
-A<- matrix(c(1,2,3,-1,0,4), ncol = 3  )
-
+A<- matrix(c(1,2,3,-1,0,4), ncol = 3 , byrow = TRUE )
+A
 X <- A %*% t(A)
 X
 
@@ -34,7 +34,7 @@ eigen_vectors_X <- eigen(X)$vectors
 eigen_vectors_X
 ```
 
-$Y=A^TA
+$Y=A^TA$
 ```{r}
 Y <-t(A) %*% A
 Y
@@ -68,7 +68,7 @@ svd_A$u
 Right  Vectors(V) = Eigen Vectors of $A^TA
 ```{r}
 svd_A$v
-eigen_vectors_Y[,1:2]
+eigen_vectors_Y
 ```
 
 

@@ -1,0 +1,144 @@
+---
+title: "HW7"
+author: "Raphael Nash"
+date: "3/14/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Problem Set 1
+
+
+Function for Mean (non-streaming)
+
+$\bar{x} = \frac{1}{n}\sum\limits_{i=1}^{i}(X_i)$
+```{r}
+
+mean_nonstreaming <- function( x ) {
+  accumulator <- 0 
+  for( val in x) {
+    accumulator <- accumulator + val
+   
+  }
+  
+  accumulator / length( x )
+
+}
+
+```
+
+
+```{r}
+
+nums <- c( 45,66,77,1,99,5,3,5)
+c( mean( nums ) , mean_nonstreaming( nums ) ) 
+
+```
+
+
+Standard Deviation (non-streaming)
+
+$\sigma = \sqrt{ \frac{1}{n}\sum\limits_{i=1}^{i}(x = \bar{x})^2}$
+```{r}
+
+sd_nonstreaming <- function( x ) {
+  n <- length( x )
+  mu <- mean_nonstreaming( x ) 
+
+  acc <- 0
+  for ( val in x ) {
+ 
+    acc <- acc +  ((val-mu) ^2) 
+  
+  }
+  
+  sqrt( acc * (1/(n-1) )) # using n-1 becasue r sd function uses n-1 
+                          # see the r help for details 
+  
+}
+
+```
+
+```{r}
+
+c(sd(nums), sd_nonstreaming(nums))
+
+```
+
+Mean Streaming
+
+To calulate the streaming mean, you need to store the sum of all values and the number of values in a global variable.  Then with each number you add you increment your number of observations and add the observation to the global accumulator. 
+```{r}
+
+mean_streaming <- function (x, init = TRUE) {
+  
+  if ( init == TRUE) {
+    streaming_mean_n <<- 0 
+    streaming_mean_sum <<- 0
+  }
+  streaming_mean_n <<- length(x) + streaming_mean_n
+  
+  for (val in x ) {
+    streaming_mean_sum <<- val + streaming_mean_sum
+  }
+  
+  streaming_mean_sum / streaming_mean_n
+  
+}
+
+```
+
+
+```{r}
+rolling_mean <- mean_streaming(1, TRUE)
+c( rolling_mean, mean(c(1))) 
+rolling_mean <- mean_streaming(c(1,2), FALSE)
+c(rolling_mean, mean(c(1,1,2))) 
+
+```
+
+
+Standard Deviation Streaming
+
+If you re-write the standard deviation formula as:
+
+$\sigma = \sqrt{ \frac{ \Sigma{x^2}}{n-1}-(\frac{\Sigma {x}}{n-1})^2}$
+
+Then, if you store in globals $\Sigma{x^2}$ , $\Sigma {x}$ and $n$, you can recalculate the stadard deviation everytime you add observation to the stream.  
+```{r}
+streaming_sd <- function (x, init = TRUE) {
+  
+  if (init == TRUE) {
+    streaming_sd_sum <<- 0
+    streaming_sd_sumsq <<- 0
+    streaming_sd_n <<- 0
+  }
+  
+  streaming_sd_n <<- streaming_sd_n + length(x)
+  streaming_sd_sum <<- streaming_sd_sum + sum(x)
+  streaming_sd_sumsq <<- streaming_sd_sumsq + sum( x^2)
+  
+  sqrt((streaming_sd_sumsq - ((streaming_sd_sum^2) / streaming_sd_n ))*(1/(streaming_sd_n-1)))
+  
+}
+```
+
+
+
+```{r}
+
+rolling_sd <- streaming_sd(c(9,10, 11), TRUE) 
+c( rolling_sd, c(sd(c(9,10,11))))
+rolling_sd <- streaming_sd(c(15), FALSE) 
+c( rolling_sd, c(sd(c(9,10,11, 15))))
+
+
+```
+
+
+

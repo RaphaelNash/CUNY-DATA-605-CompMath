@@ -1,0 +1,94 @@
+---
+title: "HW8"
+author: "Raphael Nash"
+date: "3/23/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem Set 1
+
+Your colleague either commutes by train or by the bus. 20 days of the month,
+she takes the train and the remaining 10 days she takes the bus. If she takes the
+train, she reaches work on time with a probability of 0.9. If she takes the bus, she
+frequently gets stuck in traffic and reaches work on time with a probability of 0.5.
+Given that she was on time today, what is the probability that she took the bus to
+work today?
+
+```{r}
+
+p_take_bus <- 10/30
+p_take_train <- 20/30
+p_train_on_time  <- .9
+p_bus_on_time <- .5
+
+p_took_bus_today <- (p_take_bus * p_bus_on_time  ) / 
+  ((p_bus_on_time * p_take_bus ) + (p_train_on_time *p_take_train  ))
+
+p_took_bus_today
+
+```
+
+
+## Problem Set 2
+
+Bayes network
+
+
+```{r message= FALSE, warning=FALSE}
+library("gRain")
+```
+
+
+Setup Bayes Newwork:
+```{r}
+
+no_yes <- c("no", "yes")
+low_high <- c("low","high")
+ 
+difficulty <- cptable(~difficulty, values=c(0.3, 0.7), levels = no_yes )
+ 
+intelligence <- cptable(~intelligence, values=c(0.8, 0.2), levels=low_high)
+ 
+sat_intelligence <- cptable(~sat|intelligence, values=c(0.9, 0.1, 0.2, 0.8), levels=low_high)
+ 
+grade_intelligence_difficulty <- 
+     cptable(~grade|intelligence:difficulty,
+             values=c(0.6, 0.4, 0.01, 0.99, 0.8, 0.2, 0.1, 0.9 ),levels=low_high)
+
+letter_grade <- cptable(~letter|grade,values=c(0.9, 0.1, 0.05, 0.95),levels=low_high)
+
+p_list <- compileCPT(list(difficulty, intelligence,
+                          sat_intelligence, grade_intelligence_difficulty, letter_grade))
+
+network <- grain(p_list)
+```
+
+View Bayes Network:
+```{r}
+
+plot(network)
+
+```
+In the Grade Network that we looked at in the notes, what happens to the probability of
+Diffculty of Course when you present the evidence that the received recommendation let-
+ter was good?
+```{r}
+
+querygrain(setEvidence(network, "letter", "high"), "difficulty", type="marginal")
+
+```
+In addition, now present the evidence that both SAT scores were good and
+the letter of recommendation was good, What is the probability of the Diffculty of Course
+now?
+
+```{r}
+
+querygrain(setEvidence(network,  c("sat", "letter"), c("high", "high")), "difficulty")
+
+```
