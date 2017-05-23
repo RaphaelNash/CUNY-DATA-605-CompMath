@@ -1,0 +1,462 @@
+---
+title: "CUNY DATA 605 Final"
+author: "Raphael Nash"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+```{r}
+library(dplyr )
+library(tidyr)
+library(MASS)
+library(psych)
+library(ggplot2)
+library("boot")
+options(scipen=999)
+
+```
+Your final is due by the end of day on 12/23/2016.  You should post your solutions to your GitHub account.  You are also expected to make a short presentation during our last meeting (3-5 minutes) or post a recording to the board.  This project will show off your ability to understand the elements of the class. 
+
+
+You are to register for Kaggle.com (free) and compete in the House Prices: Advanced Regression Techniques competition.  https://www.kaggle.com/c/house-prices-advanced-regression-techniques .  I want you to do the following.
+
+Pick one of the quantitative independent variables from the training data set (train.csv) , and define that variable as  X.   Pick SalePrice as the dependent variable, and define it as Y for the next analysis.   
+
+
+```{r}
+
+train_orig <- read.csv("train.csv")
+train_orig
+```
+```{r}
+train <- train_orig[,c("LotArea", "SalePrice" )]
+
+
+
+
+names(train) <- c( "X", "Y")
+train <- train[complete.cases(train),]
+train <- train[is.finite(train$X) & is.finite(train$Y), ]
+train 
+
+```
+
+
+# Probability  
+Calculate as a minimum the below probabilities a through c.  Assume the small letter "x" is estimated as the 4th quartile of the X variable, and the small letter "y" is estimated as the 2d quartile of the Y variable.  Interpret the meaning of all probabilities.  
+a  P(X>x | Y>y)		b.  P(X>x, Y>y)		c.  P(X<x | Y>y)
+
+Qet quintiles
+```{r}
+
+x_quantile <- quantile(train[,"X"])
+x_quantile
+
+y_quantile <- quantile(train[,"Y"])
+y_quantile
+
+n <- nrow(train)
+n
+```
+
+
+**a  P(X>x | Y>y)**
+
+Probabilty of X being in the fourth quantile 
+given Y in the fourth quantile
+
+```{r}
+
+p_a <- 
+prob_part_a_actual <- train %>% 
+  filter ( X > x_quantile[["75%"]] ) %>% 
+  nrow() / n
+
+
+p_b <- 
+prob_part_a_actual <- train %>% 
+  filter(Y > y_quantile[["50%"]] ) %>% 
+  nrow() / n
+
+#p(a|b) = ( p(A&B) / p(B))
+prob_part_a <- ( p_a * p_b ) /p_b 
+prob_part_a
+```
+
+
+**a  P(X>x , Y>y)**
+
+
+```{r}
+p_a <- 
+prob_part_a_actual <- train %>% 
+  filter ( X > x_quantile[["75%"]] ) %>% 
+  nrow() / n
+
+
+p_b <- 
+prob_part_a_actual <- train %>% 
+  filter(Y > y_quantile[["50%"]] ) %>% 
+  nrow() / n
+
+prob_part_b <- ( p_a * p_b ) 
+prob_part_b
+
+```
+
+
+**c.  P(X<x | Y>y)**
+
+```{r}
+
+p_a <- 
+prob_part_a_actual <- train %>% 
+  filter ( X < x_quantile[["75%"]] ) %>% 
+  nrow() / n
+
+
+p_b <- 
+prob_part_a_actual <- train %>% 
+  filter(Y > y_quantile[["50%"]] ) %>% 
+  nrow() / n
+
+#p(a|b) = ( p(A&B) / p(B))
+prob_part_c <- ( p_a * p_b ) /p_b 
+prob_part_c
+
+```
+
+**Does splitting the training data in this fashion make them independent? In other words, does
+P(XY)=P(X)P(Y) or does P(X|Y) = P(X)? **
+
+By this test they are not indepedent becasue part a (.25) != part b (.12)
+
+
+**Chi Sq**
+
+  
+```{r}
+
+#p(Y>y) && P(X>x)
+q1  <- train %>% 
+  filter(Y > y_quantile[["50%"]] ) %>% 
+  filter ( X > x_quantile[["75%"]] ) %>% 
+  nrow()/ n
+
+#p(Y>y) && P(X<= x)
+q2 <- train %>% 
+  filter(Y > y_quantile[["50%"]] ) %>% 
+  filter ( X <= x_quantile[["75%"]] ) %>% 
+  nrow()/n
+
+#p(Y <= y) && P(X>x)
+q3 <- train %>% 
+  filter(Y <= y_quantile[["50%"]] ) %>% 
+  filter ( X > x_quantile[["75%"]] ) %>% 
+  nrow()/n
+
+#p(Y <= y) && P(X<=x)
+q4 <- train %>% 
+  filter(Y <= y_quantile[["50%"]] ) %>% 
+  filter ( X <= x_quantile[["75%"]] ) %>% 
+  nrow()/n
+
+cont_table <- matrix(c(q1, q2, q3, q4) , byrow = TRUE , nrow = 2 )
+
+
+```
+contengency  table            | P(X>x)                        |  P(x<=x)
+-----------|--------------------------------|-----------
+p(Y>y)     |`r cont_table[1,1] `            |   `r cont_table[1,2] ` 
+P(Y<=Y)    |  `r cont_table[2,1] `            |`r cont_table[2,2] `
+
+```{r warning=FALSE, message =FALSE}
+
+chisq.test(cont_table)
+```
+
+Accept null hypothysis that there in no relationship between X and Y
+
+#Descriptive and Inferential Statistics
+
+Provide univariate descriptive statistics and appropriate plots for both variables
+
+
+```{r}
+
+describe(train)
+```
+
+```{r}
+ggplot(data=train, aes(X)) + geom_histogram(binwidth = 1000) +xlim(c(0,40000))
+```
+
+```{r}
+ggplot(data=train, aes(Y)) + geom_histogram(binwidth = 10000) +xlim(c(0,500000))
+```
+
+Provide a scatterplot of X and Y
+
+```{r}
+ggplot(data=train, aes(x=X, y=Y) ) + geom_point()
+```
+Transform both variables simultaneously using Box-Cox transformations
+
+```{r}
+model <- lm(Y~X,data=train)
+bc <- boxcox(model,lambda=seq(-.5,.5,by=.01))
+
+
+```
+
+```{r}
+lambda<-bc$x[which.max(bc$y)]
+lambda
+```
+
+```{r}
+train["Y_prime"] <- train["Y"]^lambda
+new_model <- lm(Y_prime~X,data=train)
+```
+
+```{r}
+summary(model)
+```
+
+```{r}
+summary(new_model)
+```
+
+
+```{r}
+
+qqnorm(train[,"Y_prime"])
+qqline(train[,"Y_prime"])
+ 
+```
+
+```{r}
+qqnorm(train[,"Y"])
+qqline(train[,"Y"])
+```
+
+
+
+```{r}
+plot(new_model$fitted.values, new_model$residuals, xlim = c(.53,.55))
+title("Residual vs Fitted New Model")
+```
+
+```{r}
+plot(model$fitted.values, model$residuals, xlim = c(100000,300000))
+title("Residual vs Fitted  Model")
+```
+
+
+
+
+
+Using the transformed variables, run a correlation analysis and interpret.  Test the hypothesis that the correlation between these variables is 0 and provide a 99% confidence interval
+
+
+```{r}
+cor.test(train[,"X"], train[,"Y"], conf.level = .99)
+
+```
+
+
+```{r}
+cor.test(train[,"X"], train[,"Y_prime"], conf.level = .99)
+
+```
+
+
+#Linear Algebra and Correlation.
+
+```{r}
+cor_M_xy <- cor(train[,c("X","Y")])
+cor_M_xy
+
+cor_M_xyprime <- cor(train[,c("X","Y_prime")])
+cor_M_xyprime
+
+```
+
+```{r}
+
+pmat_xy <- solve(cor_M_xy)
+pmat_xy
+
+pmat_xyprime <- solve(cor_M_xyprime)
+pmat_xyprime
+
+```
+
+
+```{r}
+cor_M_xy %*% pmat_xy
+
+cor_M_xyprime %*% pmat_xyprime
+
+```
+
+
+```{r}
+pmat_xy %*% cor_M_xy 
+
+pmat_xyprime %*%cor_M_xyprime
+
+```
+
+
+#Calculus-Based Probability & Statistics
+
+
+```{r}
+
+min(train[,"X"])
+
+#for this part I am picking a new "X" variable.  This X Variable does not go below zero so I can 
+# not demonstrate the location shift.   
+
+train[,"X_locshift"] <- train[,"X"] - min(train[,"X"]) +1
+
+min(train[,"X_locshift"] ) 
+```
+
+```{r, warning=FALSE}
+gamma_dist <- fitdistr(train$X_locshift, dgamma, list(shape = 1, rate = 0.1), lower = 0.01)
+
+wiebull_dist <- fitdistr(train$X_locshift, densfun = "weibull")
+ 
+
+```
+
+
+```{r}
+train["x_wiebull"] <-
+  rweibull(nrow(train), shape=wiebull_dist$estimate["shape"],
+           scale=wiebull_dist$estimate["scale"]) + min(train[,"X"]) -1 
+
+train["x_gamma"] <-
+  rgamma(nrow(train), shape=gamma_dist$estimate["shape"],
+           rate=gamma_dist$estimate["rate"]) + min(train[,"X"]) -1
+
+ density_plot_values <- train[,c("X", "x_wiebull", "x_gamma")] %>% gather( )
+ density_plot_values["key"] <- as.factor(density_plot_values[, "key"])
+ str(density_plot_values)
+```
+
+```{r}
+
+ggplot(data=density_plot_values,aes(x=value, fill=key)) + 
+  geom_density(alpha=0.25) + xlim(c(0,30000))
+
+ggplot(data=density_plot_values,aes(x=value, fill=key)) + 
+  geom_histogram(alpha=0.25) + xlim(c(0,30000))
+```
+
+I hope you do not mind.   I took a few liberties. I order to get things to graph right I had to make sure I had the same number of observations in each dataset.  Therefore I sampled the same number of observations from the fitted distributions as are in the original dataset.  Also on the graph I am comparing the original dataset to both a gamm and wiebull distribution.  I also did both a denisty graph and histogram.  The gama dist looks looks like it has the same mean value but less of a spread than the original distribution.  The weibul distribution correctly approximates the spread, but the peak of the mean is not as high or in exactly the same place.   
+
+#Modeling
+Picked a few variables from the Training dataset that looked promising
+```{r}
+
+train_orig <- read.csv("https://raw.githubusercontent.com/RaphaelNash/CUNY-DATA-605-CompMath/master/Final/train.csv")
+
+
+train <- train_orig[,c("LotArea", "SalePrice" , "OverallQual")]
+
+ggplot(data = train, aes(y=SalePrice, x = LotArea, color = OverallQual )) + geom_point()
+```
+
+
+Looks like a linear model would fit this data very well, however I will look to see
+what degree polymonial would fit this data best.  
+```{r}
+
+set.seed(5)
+cv.err5 <- numeric()
+for ( i in 1:10) {
+  glm.fit<-glm(SalePrice ~ poly(LotArea + SalePrice+ OverallQual   ,i), data=train)
+  cv.err5[i]<-cv.glm(train,glm.fit,K=5)$delta[1]
+  glm.fit
+}
+
+
+```
+
+```{r}
+
+degree=1:10
+plot(degree,cv.err5,type='b')
+```
+
+Looks like a linear model would fit this data quite will 
+
+
+
+```{r}
+
+ggplot(data=train, aes(LotArea)) + geom_histogram(binwidth = 1000) +xlim(c(0,40000))
+
+```
+```{r}
+ggplot(data=train, aes(SalePrice)) + geom_histogram(binwidth = 10000) +xlim(c(0,500000))
+
+```
+
+
+```{r}
+
+ggplot(data=train, aes(OverallQual)) + geom_histogram(binwidth = 1) +xlim(c(0,10))
+```
+
+While the Sale Price and lot area have a long tail, they look relatively normally distributed.  Therefore I am going to say that all the variables look normally distributed therefore we can go ahead with the linear regression
+```{r}
+model <- lm (SalePrice ~ . , data = train)
+```
+
+
+```{r}
+
+
+summary(model)
+
+```
+
+
+```{r}
+plot(model$fitted.values, model$residuals)
+```
+
+While lot area and overall quality do have a satistically signifigant impact on sales price, they only account for 65% of the variance in the sales price.   Alos the plot of the residuals has the megaphone shape, therfore as the salesprice gets higher, the variance increases.  In my overall judgemnt I do not think that this is a good model for this data.  I should do more exploratory data anaylsis and/or try other model types to improve the model.  
+
+
+**Prepare Kaggle Submission**
+
+```{r warning=FALSE}
+test <- read.csv("https://raw.githubusercontent.com/RaphaelNash/CUNY-DATA-605-CompMath/master/Final/test.csv")
+
+output <- predict(model,test)
+
+submission <- data.frame(
+  Id = test[,"Id"],
+  SalePrice = output
+  
+)
+
+submission[submission<0] <- 0
+
+head(submission)
+
+write.csv(submission, file="submission.csv", row.names = FALSE, quote = FALSE, append = FALSE)
+
+```
+
+
+
+
+**Kaggle User Id:** RaphaelNash
+
+**Kaggle Score:**  1.08242
