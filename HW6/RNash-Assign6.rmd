@@ -18,7 +18,7 @@ library(textmineR)
 
 1. When you roll a fair die 3 times, how many possible outcomes are there
 ```{r}
-factorial(6)*(1/6)
+6^3
 ```
 
 
